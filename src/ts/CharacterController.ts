@@ -2,26 +2,78 @@ import GamepadAPI from './controls/GamepadAPI';
 import KeyboardInput from './controls/KeyboardInput';
 import Sprite from './object/Sprite';
 
+/**
+ * A character controller, multiplexing gamepad and keyboard inputs to apply
+ * character controls to a sprite.
+ *
+ * @author Liz Ainslie
+ */
 export class CharacterController {
-  sprite: Sprite;
-  gamepadAPI: GamepadAPI;
-  movementSpeed: number = 100;
-  joystickThreshold: number = 0.25;
-  keyboardInput: KeyboardInput = new KeyboardInput();
-  sprintModifier: 1.35;
+  private readonly keyboardInput: KeyboardInput = new KeyboardInput();
+  private readonly gamepadAPI: GamepadAPI;
 
+  /**
+   * The sprite this character controller applies to.
+   *
+   * @author Liz Ainslie
+   */
+  sprite: Sprite;
+
+  /**
+   * The base movement speed of this character.
+   *
+   * @author Liz Ainslie
+   */
+  movementSpeed: number = 100;
+
+  /**
+   * The threshold for reading joystick input. Necessary so the tiniest joystick
+   * movements that are constantly happening don't send the sprite careening
+   * offscreen.
+   *
+   * @author Liz Ainslie
+   */
+  joystickThreshold: number = 0.25;
+
+  /**
+   * A speed modifier for sprinting, represented as a percentage.
+   *
+   * @author Liz Ainslie
+   */
+  sprintModifier: number = 1.35;
+
+  /**
+   * Construct a new character controller.
+   *
+   * @param sprite The sprite to control.
+   * @param gamepadAPI The gamepad API to use for controller input.
+   * @param movementSpeed The base movement speed
+   * @param joystickThreshold The joystick threshold to accept joystick input.
+   * @param sprintModifier The modifier to apply when the player is sprinting.
+   *
+   * @author Liz Ainslie
+   */
   constructor(
     sprite: Sprite,
     gamepadAPI: GamepadAPI,
     movementSpeed: number = 100,
-    joystickThreshold: number = 0.25
+    joystickThreshold: number = 0.25,
+    sprintModifier: number = 1.35
   ) {
     this.sprite = sprite;
     this.gamepadAPI = gamepadAPI;
     this.movementSpeed = movementSpeed;
     this.joystickThreshold = joystickThreshold;
+    this.sprintModifier = sprintModifier;
   }
 
+  /**
+   * Update loop code for the character controller. This reads gamepad and
+   * keyboard values and updates the movement vector of the sprite, and prefers
+   * keyboard values over controller.
+   *
+   * @author Liz Ainslie
+   */
   update() {
     this.gamepadAPI.update();
 

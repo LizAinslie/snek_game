@@ -1,6 +1,16 @@
-import PointerLock from './PointerLock';
-
+/**
+ * The GamepadAPI class adds support for the browser Gamepad API, allowing the
+ * implementation of controller support in games.
+ *
+ * @author Liz Ainslie
+ */
 export class GamepadAPI {
+  /**
+   * A list of available controller buttons, normalized to a singular list for
+   * development purposes.
+   *
+   * @author Liz Ainslie
+   */
   static buttons = [
     'A',
     'B',
@@ -22,43 +32,50 @@ export class GamepadAPI {
     'Touchpad',
   ];
 
-  controllerIndex: number;
+  controllerIndex?: number;
   turbo: boolean = false;
   buttonsCache: string[] = [];
   buttonsStatus: string[] = [];
   axesStatus: number[] = [];
 
-  private pointerLockEscapeKey: string;
-  private pointerLock: PointerLock;
+  /**
+   * Construct a new gamepad input processor.
+   *
+   * @author Liz Ainslie
+   */
+  constructor() {
+    this.connectHandler = this.connectHandler.bind(this);
+    this.disconnectHandler = this.disconnectHandler.bind(this);
 
-  constructor(
-    pointerLock: PointerLock,
-    pointerLockEscapeKey: string = 'Option'
-  ) {
-    this.pointerLock = pointerLock;
-
-    this.connect = this.connect.bind(this);
-    this.disconnect = this.disconnect.bind(this);
-
-    window.addEventListener('gamepadconnected', this.connect);
-    window.addEventListener('gamepaddisconnected', this.disconnect);
+    window.addEventListener('gamepadconnected', this.connectHandler);
+    window.addEventListener('gamepaddisconnected', this.disconnectHandler);
   }
 
-  disconnect(event: GamepadEvent) {
+  private disconnectHandler(_event: GamepadEvent) {
     this.turbo = false;
     delete this.controllerIndex;
     console.log('Gamepad disconnected');
   }
 
-  connect(event: GamepadEvent) {
+  private connectHandler(event: GamepadEvent) {
     this.controllerIndex = event.gamepad.index;
     this.turbo = true;
-    // this.pointerLock.element.click();
     console.log('Gamepad connected', event.gamepad);
   }
 
+  /**
+   * Called in a game's update loop, reads and processes controller input data
+   * for use in game logic.
+   *
+   * @author Liz Ainslie
+   */
   update() {
     this.buttonsCache = []; // Clear the buttons cache
+
+    if (!this.controllerIndex) {
+      this.turbo = false;
+      return;
+    }
 
     // Move the buttons status from the previous frame to the cache
     for (let k = 0; k < this.buttonsStatus.length; k++)
@@ -75,22 +92,27 @@ export class GamepadAPI {
         if (c.buttons[b].pressed) pressed.push(GamepadAPI.buttons[b]);
 
     // Loop through axes and push their values to the array
-    const axes = [];
-    if (c.axes) {
-      for (let a = 0; a < c.axes.length; a++) {
-        axes.push(c.axes[a].toFixed(2));
-      }
-    }
+    const axes: number[] = [];
+    if (c.axes)
+      for (let a = 0; a < c.axes.length; a++)
+        axes.push(parseInt(c.axes[a].toFixed(2)));
 
     // Assign received values
     this.axesStatus = axes;
     this.buttonsStatus = pressed;
 
-    if (pressed.includes(this.pointerLockEscapeKey)) this.pointerLock.unlock();
-
     return pressed; // Return buttons for debugging purposes
   }
 
+  /**
+   * Check if a controller button is pressed.
+   *
+   * @param button The button to check.
+   * @param hold Whether or not to ensure the button is held
+   *
+   * @author Liz Ainslie
+   * @see GamepadAPI.buttons
+   */
   buttonPressed(button: string, hold: boolean = false) {
     let newPress = false;
 
