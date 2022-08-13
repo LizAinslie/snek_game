@@ -33,7 +33,7 @@ class Game {
   gamepadAPI: GamepadAPI;
 
   constructor(canvas: HTMLCanvasElement) {
-    this.ctx = canvas.getContext('2d');
+    this.ctx = canvas.getContext('2d')!;
 
     this.paint = this.paint.bind(this);
     this.loop = this.loop.bind(this);
