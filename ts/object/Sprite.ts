@@ -13,6 +13,8 @@ export abstract class Sprite implements GameObject {
   update() {
     this.pos.x += this.movementVector.x * Delta.deltaTime;
     this.pos.y += this.movementVector.y * Delta.deltaTime;
+
+    this.movementVector.reset();
   }
 }
 
